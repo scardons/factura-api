@@ -1,6 +1,5 @@
 import { Router } from 'express';
 import multer from 'multer';
-import path from 'path';
 import { procesarFacturaPDF } from '../controllers/factura.controller';
 
 const router = Router();
