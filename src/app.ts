@@ -8,10 +8,9 @@ dotenv.config();
 const app = express();
 app.use(express.json());
 
-// Ruta raíz para que Render no diga "Cannot GET /"
-app.get('/', (req, res) => {
-  res.send('¡La API de procesamiento de facturas está funcionando!');
-});
+// Servir archivos estáticos (incluye index.html en /public)
+app.use(express.static(path.join(__dirname, '../public')));
+
 
 app.use('/uploads', express.static(path.join(__dirname, '../uploads')));
 app.use('/api/facturas', facturaRoutes);
