@@ -11,18 +11,27 @@
     <button type="submit">Subir</button>
   </form>
 
+
 <script>
   const form = document.getElementById('formulario');
+  const resultado = document.getElementById('resultado');
+
   form.addEventListener('submit', async (e) => {
     e.preventDefault();
     const formData = new FormData(form);
-    const res = await fetch('https://factura-api.onrender.com/api/facturas/subir', {
+
+    const res = await fetch('/api/facturas/subir', {
       method: 'POST',
       body: formData,
     });
+
     const data = await res.json();
-    console.log(data);
-    alert('Factura procesada');
+
+    if(data.success) {
+      resultado.textContent = data.textoExtraido;
+    } else {
+      resultado.textContent = "Error: " + (data.error || 'Error desconocido');
+    }
   });
 </script>
 
