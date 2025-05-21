@@ -1,5 +1,5 @@
 import { Request, Response } from 'express';
-import OAuthClient from 'intuit-oauth';
+const OAuthClient = require('intuit-oauth');
 
 const oauthClient = new OAuthClient({
   clientId: process.env.CLIENT_ID!,
