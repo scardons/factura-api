@@ -3,6 +3,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
+//src/routes/factura.routes.ts
 const express_1 = require("express");
 const multer_1 = __importDefault(require("multer"));
 const factura_controller_1 = require("../controllers/factura.controller");

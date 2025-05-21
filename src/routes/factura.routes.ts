@@ -1,3 +1,4 @@
+//src/routes/factura.routes.ts
 import { Router } from 'express';
 import multer from 'multer';
 import { procesarFacturaPDF } from '../controllers/factura.controller';

@@ -13,16 +13,16 @@ exports.procesarFacturaPDF = void 0;
 const factura_service_1 = require("../services/factura.service");
 const procesarFacturaPDF = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     if (!req.file) {
-        res.status(400).json({ error: 'No se subió ningún archivo' });
+        res.status(400).json({ success: false, error: 'No se subió ningún archivo' });
         return;
     }
     try {
         const resultado = yield (0, factura_service_1.procesarFacturaService)(req.file.path);
-        res.json(resultado);
+        res.json(Object.assign({ success: true, mensaje: 'Factura procesada exitosamente' }, resultado));
     }
     catch (error) {
         console.error('Error:', error);
-        res.status(500).json({ error: 'Error al procesar la factura' });
+        res.status(500).json({ success: false, error: 'Error al procesar la factura' });
     }
 });
 exports.procesarFacturaPDF = procesarFacturaPDF;

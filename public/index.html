@@ -20,22 +20,31 @@
 
   form.addEventListener('submit', async (e) => {
     e.preventDefault();
-    const formData = new FormData(form);
+    resultado.textContent = 'Procesando...'; // Mostrar algo mientras espera
 
-    const res = await fetch('/api/facturas/subir', {
-      method: 'POST',
-      body: formData,
-    });
+    try {
+      const formData = new FormData(form);
+      const res = await fetch('/api/facturas/subir', {
+        method: 'POST',
+        body: formData,
+      });
 
-    const data = await res.json();
+      const data = await res.json();
 
-    if(data.success) {
-      resultado.textContent = data.textoExtraido;
-    } else {
-      resultado.textContent = "Error: " + (data.error || 'Error desconocido');
+      if (!res.ok || !data.success) {
+        // Primero mostramos el error
+        resultado.textContent = "❌ Error: " + (data.error || 'Error desconocido');
+        return;
+      }
+
+      // Luego, si no hay errores, mostramos éxito
+      resultado.textContent = `✅ Factura procesada exitosamente.\n\nTexto extraído:\n${data.textoExtraido}`;
+    } catch (error) {
+      resultado.textContent = "❌ Error inesperado: " + error.message;
     }
   });
 </script>
+
 
 </body>
 </html>
