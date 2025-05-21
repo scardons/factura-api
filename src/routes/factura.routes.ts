@@ -3,15 +3,7 @@ import multer from 'multer';
 import { procesarFacturaPDF } from '../controllers/factura.controller';
 
 const router = Router();
-
-const storage = multer.diskStorage({
-  destination: 'uploads/',
-  filename: (_: any, file: { originalname: any; }, cb: (arg0: null, arg1: string) => void) => {
-    cb(null, `${Date.now()}-${file.originalname}`);
-  }
-});
-
-const upload = multer({ storage });
+const upload = multer({ dest: 'uploads/' });
 
 router.post('/subir', upload.single('factura'), procesarFacturaPDF);
 

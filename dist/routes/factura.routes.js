@@ -7,12 +7,6 @@ const express_1 = require("express");
 const multer_1 = __importDefault(require("multer"));
 const factura_controller_1 = require("../controllers/factura.controller");
 const router = (0, express_1.Router)();
-const storage = multer_1.default.diskStorage({
-    destination: 'uploads/',
-    filename: (_, file, cb) => {
-        cb(null, `${Date.now()}-${file.originalname}`);
-    }
-});
-const upload = (0, multer_1.default)({ storage });
+const upload = (0, multer_1.default)({ dest: 'uploads/' });
 router.post('/subir', upload.single('factura'), factura_controller_1.procesarFacturaPDF);
 exports.default = router;

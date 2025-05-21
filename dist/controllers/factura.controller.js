@@ -8,30 +8,21 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
         step((generator = generator.apply(thisArg, _arguments || [])).next());
     });
 };
-var __importDefault = (this && this.__importDefault) || function (mod) {
-    return (mod && mod.__esModule) ? mod : { "default": mod };
-};
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.procesarFacturaPDF = void 0;
-const fs_1 = __importDefault(require("fs"));
-const pdf_parse_1 = __importDefault(require("pdf-parse"));
+const factura_service_1 = require("../services/factura.service");
 const procesarFacturaPDF = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     if (!req.file) {
         res.status(400).json({ error: 'No se subió ningún archivo' });
         return;
     }
     try {
-        const dataBuffer = fs_1.default.readFileSync(req.file.path);
-        const pdfData = yield (0, pdf_parse_1.default)(dataBuffer);
-        res.json({
-            success: true,
-            textoExtraido: pdfData.text
-        });
+        const resultado = yield (0, factura_service_1.procesarFacturaService)(req.file.path);
+        res.json(resultado);
     }
     catch (error) {
-        console.error('Error al procesar el PDF:', error);
-        res.status(500).json({ error: 'Error al procesar el PDF' });
-        return;
+        console.error('Error:', error);
+        res.status(500).json({ error: 'Error al procesar la factura' });
     }
 });
 exports.procesarFacturaPDF = procesarFacturaPDF;
