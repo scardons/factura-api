@@ -38,13 +38,12 @@ const handleCallback = (req, res) => __awaiter(void 0, void 0, void 0, function*
         }
         console.log('🔄 Código recibido:', code);
         console.log('🔄 RealmId recibido:', realmId);
+        // Obtener tokens usando tu servicio, que internamente usa setTokens para guardar
         const tokenData = yield (0, auth_service_1.obtenerTokensQuickBooks)(code, realmId);
-        tokenStore_1.quickbooksTokens.access_token = tokenData.access_token;
-        tokenStore_1.quickbooksTokens.refresh_token = tokenData.refresh_token;
-        tokenStore_1.quickbooksTokens.realmId = realmId;
-        (0, tokenStore_1.setTokens)(tokenData.access_token, tokenData.refresh_token, realmId, tokenData.expires_in);
-        console.log('🎯 Tokens guardados:', tokenStore_1.quickbooksTokens);
-        res.json({ message: 'Autenticado con éxito', tokens: tokenStore_1.quickbooksTokens });
+        // Ya no modificamos quickbooksTokens directamente; usamos cargarTokens para leer el estado actual
+        const tokensGuardados = yield (0, tokenStore_1.cargarTokens)();
+        console.log('🎯 Tokens guardados:', tokensGuardados);
+        res.json({ message: 'Autenticado con éxito', tokens: tokensGuardados });
     }
     catch (error) {
         console.error('OAuth callback error:', error);

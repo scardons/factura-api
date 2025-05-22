@@ -13,23 +13,21 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.procesarFacturaService = void 0;
-// src/services/factura.service.ts
 const fs_1 = __importDefault(require("fs"));
 const pdf_parse_1 = __importDefault(require("pdf-parse"));
-const tokenStore_1 = require("../store/tokenStore");
+const tokenStore_1 = require("../store/tokenStore"); // Correcto
 const extraerDatosFactura_1 = require("../utils/extraerDatosFactura");
 const quickbooks_client_1 = require("../clients/quickbooks.client");
 const auth_service_1 = require("./auth.service");
 const procesarFacturaService = (rutaArchivo) => __awaiter(void 0, void 0, void 0, function* () {
     console.log('--- procesarFacturaService llamado ---');
-    console.log('quickbooksTokens actual:', tokenStore_1.quickbooksTokens);
-    if (!tokenStore_1.quickbooksTokens) {
-        console.error('Error: QuickBooks no autenticado - quickbooksTokens está null o undefined');
+    const tokensGuardados = yield (0, tokenStore_1.cargarTokens)();
+    console.log('Tokens guardados actualmente:', tokensGuardados);
+    if (!tokensGuardados || !tokensGuardados.access_token) {
         throw new Error('QuickBooks no autenticado');
     }
-    // 🔐 Obtener token fresco antes de cualquier llamada a la API
     const accessToken = yield (0, auth_service_1.getAccessTokenSeguro)();
-    console.log("🔑 Token usado para API:", accessToken);
+    console.log('🔑 Token usado para API:', accessToken);
     if (!accessToken) {
         throw new Error('No se pudo obtener un token válido para QuickBooks');
     }
@@ -39,10 +37,10 @@ const procesarFacturaService = (rutaArchivo) => __awaiter(void 0, void 0, void 0
     console.log('Texto extraído del PDF:', texto);
     const datos = (0, extraerDatosFactura_1.extraerDatosFactura)(texto);
     console.log('Datos extraídos de la factura:', datos);
-    // ✅ Llamadas con token
-    const cliente = yield (0, quickbooks_client_1.buscarOCrearCliente)(datos.nombreCliente, datos.emailCliente, accessToken);
+    // Llamadas sin pasar token explícitamente, ya se manejan internamente
+    const cliente = yield (0, quickbooks_client_1.buscarOCrearCliente)(datos.nombreCliente, datos.emailCliente);
     console.log('Cliente obtenido o creado:', cliente);
-    const producto = yield (0, quickbooks_client_1.buscarOCrearProducto)(datos.nombreProducto, accessToken);
+    const producto = yield (0, quickbooks_client_1.buscarOCrearProducto)(datos.nombreProducto);
     console.log('Producto obtenido o creado:', producto);
     const factura = {
         CustomerRef: { value: cliente.Id },
@@ -57,7 +55,7 @@ const procesarFacturaService = (rutaArchivo) => __awaiter(void 0, void 0, void 0
         ],
         BillEmail: { Address: datos.emailCliente }
     };
-    const respuestaFactura = yield (0, quickbooks_client_1.crearFacturaQuickBooks)(factura, accessToken);
+    const respuestaFactura = yield (0, quickbooks_client_1.crearFacturaQuickBooks)(factura);
     console.log('Respuesta de creación de factura en QuickBooks:', respuestaFactura);
     return {
         textoExtraido: texto,

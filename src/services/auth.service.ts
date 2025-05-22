@@ -1,11 +1,9 @@
-//src/services/auth.services.ts
 import axios from 'axios';
 import {
   setTokens,
   getRefreshToken,
   getTokenExpiry,
-  quickbooksTokens,
-  cargarTokens // <-- importar función para cargar tokens
+  cargarTokens,
 } from '../store/tokenStore';
 
 const clientId = process.env.CLIENT_ID!;
@@ -13,7 +11,7 @@ const clientSecret = process.env.CLIENT_SECRET!;
 const redirectUri = process.env.REDIRECT_URI!;
 const basicAuth = Buffer.from(`${clientId}:${clientSecret}`).toString('base64');
 
-// Cargar tokens guardados al iniciar el servicio
+// Cargar tokens guardados al iniciar el servicio (si quieres, puedes hacer esto en otro lugar)
 cargarTokens();
 
 export async function obtenerTokensQuickBooks(code: string, realmId: string) {
@@ -28,28 +26,29 @@ export async function obtenerTokensQuickBooks(code: string, realmId: string) {
   const response = await axios.post(url, params, {
     headers: {
       Authorization: `Basic ${basicAuth}`,
-      'Content-Type': 'application/x-www-form-urlencoded'
-    }
+      'Content-Type': 'application/x-www-form-urlencoded',
+    },
   });
 
   const { access_token, refresh_token, expires_in } = response.data;
 
   console.log('🟢 Tokens recibidos:', response.data);
 
-  setTokens(access_token, refresh_token, realmId, expires_in);
+  await setTokens(access_token, refresh_token, realmId, expires_in);
 
   return response.data;
 }
 
 export async function refrescarTokenQuickBooks() {
-  const refreshToken = getRefreshToken();
+  const refreshToken = await getRefreshToken();
 
   if (!refreshToken) {
     console.error('❌ No refresh token disponible');
     throw new Error('No refresh token disponible');
   }
 
-  const realmId = quickbooksTokens.realmId;
+  const tokens = await cargarTokens();
+  const realmId = tokens?.realmId;
   if (!realmId) {
     throw new Error('No se encontró realmId para refrescar token');
   }
@@ -62,20 +61,20 @@ export async function refrescarTokenQuickBooks() {
   const response = await axios.post(url, params, {
     headers: {
       Authorization: `Basic ${basicAuth}`,
-      'Content-Type': 'application/x-www-form-urlencoded'
-    }
+      'Content-Type': 'application/x-www-form-urlencoded',
+    },
   });
 
   const { access_token, refresh_token, expires_in } = response.data;
   console.log('🔄 Token refrescado:', response.data);
 
-  setTokens(access_token, refresh_token, realmId, expires_in);
+  await setTokens(access_token, refresh_token, realmId, expires_in);
 
   return response.data;
 }
 
-export async function getAccessTokenSeguro() {
-  const tokenExpiry = getTokenExpiry();
+export async function getAccessTokenSeguro(): Promise<string | null> {
+  const tokenExpiry = await getTokenExpiry();
   console.log('⏰ Verificando expiración token:', tokenExpiry, 'ahora:', Date.now());
 
   if (Date.now() > tokenExpiry - 60000) {
@@ -85,6 +84,11 @@ export async function getAccessTokenSeguro() {
     console.log('✅ Token válido, no es necesario refrescar');
   }
 
-  console.log('🔑 Access token actual:', quickbooksTokens.access_token);
-  return quickbooksTokens.access_token;
+  const tokens = await cargarTokens();
+  const accessToken = tokens?.access_token || null;
+  console.log('🔑 Access token actual:', accessToken);
+
+  return accessToken;
 }
+export { cargarTokens };
+

@@ -2,7 +2,7 @@
 import { Request, Response } from 'express';
 const OAuthClient = require('intuit-oauth');
 import { obtenerTokensQuickBooks } from '../services/auth.service';
-import { quickbooksTokens, setTokens } from '../store/tokenStore';
+import { setTokens, cargarTokens } from '../store/tokenStore';
 
 const oauthClient = new OAuthClient({
   clientId: process.env.CLIENT_ID!,
@@ -34,16 +34,15 @@ export const handleCallback = async (req: Request, res: Response): Promise<void>
     console.log('🔄 Código recibido:', code);
     console.log('🔄 RealmId recibido:', realmId);
 
+    // Obtener tokens usando tu servicio, que internamente usa setTokens para guardar
     const tokenData = await obtenerTokensQuickBooks(code, realmId);
 
-    quickbooksTokens.access_token = tokenData.access_token;
-    quickbooksTokens.refresh_token = tokenData.refresh_token;
-    quickbooksTokens.realmId = realmId;
+    // Ya no modificamos quickbooksTokens directamente; usamos cargarTokens para leer el estado actual
+    const tokensGuardados = await cargarTokens();
 
-    setTokens(tokenData.access_token, tokenData.refresh_token, realmId, tokenData.expires_in);
+    console.log('🎯 Tokens guardados:', tokensGuardados);
 
-    console.log('🎯 Tokens guardados:', quickbooksTokens);
-    res.json({ message: 'Autenticado con éxito', tokens: quickbooksTokens });
+    res.json({ message: 'Autenticado con éxito', tokens: tokensGuardados });
   } catch (error) {
     console.error('OAuth callback error:', error);
     res.status(500).json({

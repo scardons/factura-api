@@ -1,15 +1,18 @@
+// src/clients/quickbooks.client.ts
 import axios from 'axios';
-import { quickbooksTokens } from '../store/tokenStore';
+import { getAccessTokenSeguro, cargarTokens } from '../services/auth.service';
 
 function authHeaders(token: string) {
   return {
     Authorization: `Bearer ${token}`,
-    Accept: 'application/json'
+    Accept: 'application/json',
   };
 }
 
-export async function buscarOCrearCliente(nombre: string, email: string, token: string) {
-  const realmId = quickbooksTokens.realmId;
+export async function buscarOCrearCliente(nombre: string, email: string) {
+  const tokens = await cargarTokens();
+  const token = await getAccessTokenSeguro();
+  const realmId = tokens?.realmId;
 
   if (!token || !realmId) {
     throw new Error('QuickBooks no autenticado correctamente (token o realmId faltante)');
@@ -21,7 +24,7 @@ export async function buscarOCrearCliente(nombre: string, email: string, token: 
     { headers: authHeaders(token) }
   );
 
-  if (res.data.QueryResponse.Customer?.length > 0) {
+  if (res.data.QueryResponse?.Customer?.length > 0) {
     return res.data.QueryResponse.Customer[0];
   }
 
@@ -29,7 +32,7 @@ export async function buscarOCrearCliente(nombre: string, email: string, token: 
     `https://sandbox-quickbooks.api.intuit.com/v3/company/${realmId}/customer`,
     {
       DisplayName: nombre,
-      PrimaryEmailAddr: { Address: email }
+      PrimaryEmailAddr: { Address: email },
     },
     { headers: authHeaders(token) }
   );
@@ -37,8 +40,10 @@ export async function buscarOCrearCliente(nombre: string, email: string, token: 
   return createRes.data.Customer;
 }
 
-export async function buscarOCrearProducto(nombre: string, token: string) {
-  const realmId = quickbooksTokens.realmId;
+export async function buscarOCrearProducto(nombre: string) {
+  const tokens = await cargarTokens();
+  const token = await getAccessTokenSeguro();
+  const realmId = tokens?.realmId;
 
   if (!token || !realmId) {
     throw new Error('QuickBooks no autenticado correctamente (token o realmId faltante)');
@@ -50,7 +55,7 @@ export async function buscarOCrearProducto(nombre: string, token: string) {
     { headers: authHeaders(token) }
   );
 
-  if (res.data.QueryResponse.Item?.length > 0) {
+  if (res.data.QueryResponse?.Item?.length > 0) {
     return res.data.QueryResponse.Item[0];
   }
 
@@ -61,8 +66,8 @@ export async function buscarOCrearProducto(nombre: string, token: string) {
       Type: 'Service',
       IncomeAccountRef: {
         value: '79',
-        name: 'Sales of Product Income'
-      }
+        name: 'Sales of Product Income',
+      },
     },
     { headers: authHeaders(token) }
   );
@@ -70,8 +75,10 @@ export async function buscarOCrearProducto(nombre: string, token: string) {
   return createRes.data.Item;
 }
 
-export async function crearFacturaQuickBooks(factura: any, accessToken: string) {
-  const realmId = quickbooksTokens.realmId;
+export async function crearFacturaQuickBooks(factura: any) {
+  const tokens = await cargarTokens();
+  const accessToken = await getAccessTokenSeguro();
+  const realmId = tokens?.realmId;
 
   if (!accessToken || !realmId) {
     throw new Error('QuickBooks no autenticado correctamente (token o realmId faltante)');
@@ -83,8 +90,8 @@ export async function crearFacturaQuickBooks(factura: any, accessToken: string) 
     {
       headers: {
         ...authHeaders(accessToken),
-        'Content-Type': 'application/json'
-      }
+        'Content-Type': 'application/json',
+      },
     }
   );
 
