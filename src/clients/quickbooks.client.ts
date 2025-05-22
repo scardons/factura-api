@@ -1,6 +1,4 @@
-//src/clients/quickbooks.client.ts
 import axios from 'axios';
-import { getAccessTokenSeguro } from '../services/auth.service';
 import { quickbooksTokens } from '../store/tokenStore';
 
 function authHeaders(token: string) {
@@ -10,8 +8,7 @@ function authHeaders(token: string) {
   };
 }
 
-export async function buscarOCrearCliente(nombre: string, email: string) {
-  const token = await getAccessTokenSeguro();
+export async function buscarOCrearCliente(nombre: string, email: string, token: string) {
   const realmId = quickbooksTokens.realmId;
 
   if (!token || !realmId) {
@@ -40,8 +37,7 @@ export async function buscarOCrearCliente(nombre: string, email: string) {
   return createRes.data.Customer;
 }
 
-export async function buscarOCrearProducto(nombre: string) {
-  const token = await getAccessTokenSeguro();
+export async function buscarOCrearProducto(nombre: string, token: string) {
   const realmId = quickbooksTokens.realmId;
 
   if (!token || !realmId) {
@@ -74,11 +70,10 @@ export async function buscarOCrearProducto(nombre: string) {
   return createRes.data.Item;
 }
 
-export async function crearFacturaQuickBooks(factura: any) {
-  const token = await getAccessTokenSeguro();
+export async function crearFacturaQuickBooks(factura: any, accessToken: string) {
   const realmId = quickbooksTokens.realmId;
 
-  if (!token || !realmId) {
+  if (!accessToken || !realmId) {
     throw new Error('QuickBooks no autenticado correctamente (token o realmId faltante)');
   }
 
@@ -87,7 +82,7 @@ export async function crearFacturaQuickBooks(factura: any) {
     factura,
     {
       headers: {
-        ...authHeaders(token),
+        ...authHeaders(accessToken),
         'Content-Type': 'application/json'
       }
     }

@@ -15,9 +15,7 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.buscarOCrearCliente = buscarOCrearCliente;
 exports.buscarOCrearProducto = buscarOCrearProducto;
 exports.crearFacturaQuickBooks = crearFacturaQuickBooks;
-//src/clients/quickbooks.client.ts
 const axios_1 = __importDefault(require("axios"));
-const auth_service_1 = require("../services/auth.service");
 const tokenStore_1 = require("../store/tokenStore");
 function authHeaders(token) {
     return {
@@ -25,10 +23,9 @@ function authHeaders(token) {
         Accept: 'application/json'
     };
 }
-function buscarOCrearCliente(nombre, email) {
+function buscarOCrearCliente(nombre, email, token) {
     return __awaiter(this, void 0, void 0, function* () {
         var _a;
-        const token = yield (0, auth_service_1.getAccessTokenSeguro)();
         const realmId = tokenStore_1.quickbooksTokens.realmId;
         if (!token || !realmId) {
             throw new Error('QuickBooks no autenticado correctamente (token o realmId faltante)');
@@ -45,10 +42,9 @@ function buscarOCrearCliente(nombre, email) {
         return createRes.data.Customer;
     });
 }
-function buscarOCrearProducto(nombre) {
+function buscarOCrearProducto(nombre, token) {
     return __awaiter(this, void 0, void 0, function* () {
         var _a;
-        const token = yield (0, auth_service_1.getAccessTokenSeguro)();
         const realmId = tokenStore_1.quickbooksTokens.realmId;
         if (!token || !realmId) {
             throw new Error('QuickBooks no autenticado correctamente (token o realmId faltante)');
@@ -69,15 +65,14 @@ function buscarOCrearProducto(nombre) {
         return createRes.data.Item;
     });
 }
-function crearFacturaQuickBooks(factura) {
+function crearFacturaQuickBooks(factura, accessToken) {
     return __awaiter(this, void 0, void 0, function* () {
-        const token = yield (0, auth_service_1.getAccessTokenSeguro)();
         const realmId = tokenStore_1.quickbooksTokens.realmId;
-        if (!token || !realmId) {
+        if (!accessToken || !realmId) {
             throw new Error('QuickBooks no autenticado correctamente (token o realmId faltante)');
         }
         const res = yield axios_1.default.post(`https://sandbox-quickbooks.api.intuit.com/v3/company/${realmId}/invoice`, factura, {
-            headers: Object.assign(Object.assign({}, authHeaders(token)), { 'Content-Type': 'application/json' })
+            headers: Object.assign(Object.assign({}, authHeaders(accessToken)), { 'Content-Type': 'application/json' })
         });
         return res.data;
     });

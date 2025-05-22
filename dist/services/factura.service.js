@@ -13,12 +13,13 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.procesarFacturaService = void 0;
-//src/services/factura.service.ts
+// src/services/factura.service.ts
 const fs_1 = __importDefault(require("fs"));
 const pdf_parse_1 = __importDefault(require("pdf-parse"));
 const tokenStore_1 = require("../store/tokenStore");
 const extraerDatosFactura_1 = require("../utils/extraerDatosFactura");
 const quickbooks_client_1 = require("../clients/quickbooks.client");
+const auth_service_1 = require("./auth.service");
 const procesarFacturaService = (rutaArchivo) => __awaiter(void 0, void 0, void 0, function* () {
     console.log('--- procesarFacturaService llamado ---');
     console.log('quickbooksTokens actual:', tokenStore_1.quickbooksTokens);
@@ -26,16 +27,22 @@ const procesarFacturaService = (rutaArchivo) => __awaiter(void 0, void 0, void 0
         console.error('Error: QuickBooks no autenticado - quickbooksTokens está null o undefined');
         throw new Error('QuickBooks no autenticado');
     }
+    // 🔐 Obtener token fresco antes de cualquier llamada a la API
+    const accessToken = yield (0, auth_service_1.getAccessTokenSeguro)();
+    console.log("🔑 Token usado para API:", accessToken);
+    if (!accessToken) {
+        throw new Error('No se pudo obtener un token válido para QuickBooks');
+    }
     const dataBuffer = fs_1.default.readFileSync(rutaArchivo);
     const pdfData = yield (0, pdf_parse_1.default)(dataBuffer);
     const texto = pdfData.text;
     console.log('Texto extraído del PDF:', texto);
     const datos = (0, extraerDatosFactura_1.extraerDatosFactura)(texto);
     console.log('Datos extraídos de la factura:', datos);
-    // Llamadas sin realmId ni token (ya se obtienen internamente)
-    const cliente = yield (0, quickbooks_client_1.buscarOCrearCliente)(datos.nombreCliente, datos.emailCliente);
+    // ✅ Llamadas con token
+    const cliente = yield (0, quickbooks_client_1.buscarOCrearCliente)(datos.nombreCliente, datos.emailCliente, accessToken);
     console.log('Cliente obtenido o creado:', cliente);
-    const producto = yield (0, quickbooks_client_1.buscarOCrearProducto)(datos.nombreProducto);
+    const producto = yield (0, quickbooks_client_1.buscarOCrearProducto)(datos.nombreProducto, accessToken);
     console.log('Producto obtenido o creado:', producto);
     const factura = {
         CustomerRef: { value: cliente.Id },
@@ -50,7 +57,7 @@ const procesarFacturaService = (rutaArchivo) => __awaiter(void 0, void 0, void 0
         ],
         BillEmail: { Address: datos.emailCliente }
     };
-    const respuestaFactura = yield (0, quickbooks_client_1.crearFacturaQuickBooks)(factura);
+    const respuestaFactura = yield (0, quickbooks_client_1.crearFacturaQuickBooks)(factura, accessToken);
     console.log('Respuesta de creación de factura en QuickBooks:', respuestaFactura);
     return {
         textoExtraido: texto,

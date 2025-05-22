@@ -1,9 +1,10 @@
-//src/services/factura.service.ts
+// src/services/factura.service.ts
 import fs from 'fs';
 import pdfParse from 'pdf-parse';
 import { quickbooksTokens } from '../store/tokenStore';
 import { extraerDatosFactura } from '../utils/extraerDatosFactura';
 import { buscarOCrearCliente, buscarOCrearProducto, crearFacturaQuickBooks } from '../clients/quickbooks.client';
+import { getAccessTokenSeguro } from './auth.service';
 
 export const procesarFacturaService = async (rutaArchivo: string) => {
   console.log('--- procesarFacturaService llamado ---');
@@ -12,6 +13,14 @@ export const procesarFacturaService = async (rutaArchivo: string) => {
   if (!quickbooksTokens) {
     console.error('Error: QuickBooks no autenticado - quickbooksTokens está null o undefined');
     throw new Error('QuickBooks no autenticado');
+  }
+
+  // 🔐 Obtener token fresco antes de cualquier llamada a la API
+  const accessToken = await getAccessTokenSeguro();
+  console.log("🔑 Token usado para API:", accessToken);
+
+  if (!accessToken) {
+    throw new Error('No se pudo obtener un token válido para QuickBooks');
   }
 
   const dataBuffer = fs.readFileSync(rutaArchivo);
@@ -23,11 +32,11 @@ export const procesarFacturaService = async (rutaArchivo: string) => {
   const datos = extraerDatosFactura(texto);
   console.log('Datos extraídos de la factura:', datos);
 
-  // Llamadas sin realmId ni token (ya se obtienen internamente)
-  const cliente = await buscarOCrearCliente(datos.nombreCliente, datos.emailCliente);
+  // ✅ Llamadas con token
+  const cliente = await buscarOCrearCliente(datos.nombreCliente, datos.emailCliente, accessToken);
   console.log('Cliente obtenido o creado:', cliente);
 
-  const producto = await buscarOCrearProducto(datos.nombreProducto);
+  const producto = await buscarOCrearProducto(datos.nombreProducto, accessToken);
   console.log('Producto obtenido o creado:', producto);
 
   const factura = {
@@ -44,7 +53,7 @@ export const procesarFacturaService = async (rutaArchivo: string) => {
     BillEmail: { Address: datos.emailCliente }
   };
 
-  const respuestaFactura = await crearFacturaQuickBooks(factura);
+  const respuestaFactura = await crearFacturaQuickBooks(factura, accessToken);
   console.log('Respuesta de creación de factura en QuickBooks:', respuestaFactura);
 
   return {
