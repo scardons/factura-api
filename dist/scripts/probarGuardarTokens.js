@@ -9,7 +9,7 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
     });
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-// scripts/probarGuardarTokens.ts
+//src/scripts/probarGuardarTokens.ts
 const tokenStore_1 = require("../store/tokenStore");
 function main() {
     return __awaiter(this, void 0, void 0, function* () {

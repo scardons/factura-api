@@ -1,4 +1,4 @@
-// scripts/probarGuardarTokens.ts
+//src/scripts/probarGuardarTokens.ts
 import { guardarTokens } from '../store/tokenStore';
 
 async function main() {
